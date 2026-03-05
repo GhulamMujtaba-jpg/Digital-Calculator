@@ -1,70 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GM Auto Sales System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GM Online Store</title>
 <style>
-/* Paste tumhara existing CSS yahan */
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+}
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+header h1 {
+    margin: 0;
+}
+.container {
+    padding: 15px;
+}
+#addProductForm input, #addProductForm button {
+    padding: 8px;
+    margin: 5px 0;
+}
+.products {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+.product-card {
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    width: 200px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    text-align: center;
+}
+.product-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+.price {
+    font-weight: bold;
+    color: green;
+}
+.discount {
+    color: red;
+    font-weight: bold;
+}
+button.orderBtn {
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+input[type="file"] {
+    padding: 3px;
+}
 </style>
 </head>
 <body>
 
 <header>
-<h2>GM Auto Sales System</h2>
-<button onclick="toggleMode()">Dark/Light</button>
-<button onclick="clearSales()">Clear Sales</button>
-<button onclick="takeScreenshot()">Screenshot</button>
-<button onclick="printPage()">Print</button>
-<button onclick="nextDay()">Next Day</button>
+<h1>GM Online Store</h1>
 </header>
 
 <div class="container">
-<h3>Add Product</h3>
-<input id="pname" placeholder="Product Name">
-<input type="number" id="cost" placeholder="Cost Price">
-<input type="number" id="sale" placeholder="Sale Price">
-<input type="number" id="stock" placeholder="Stock (optional)">
-<button onclick="addProduct()">Add</button>
 
-<h3>Products</h3>
-<button onclick="renderProducts()">Card View</button>
-<button onclick="showTableView()">Table View</button>
-<button onclick="exportCSV()">Export Excel</button>
-<br>
-<input id="searchBox" placeholder="Search Product..." onkeyup="searchProduct()">
-<div id="productList"></div>
+<h2>Add Product (Admin Only)</h2>
+<form id="addProductForm">
+    <input type="text" id="pName" placeholder="Product Name" required><br>
+    <input type="number" id="pPrice" placeholder="Price" required><br>
+    <input type="number" id="pDiscount" placeholder="Discount %" value="0"><br>
+    <input type="text" id="pWhatsApp" placeholder="Your WhatsApp Number" required><br>
+    <input type="file" id="pImage" accept="image/*" required><br>
+    <button type="submit">Add Product</button>
+</form>
 
-<h3>Dashboard</h3>
-<div class="dashboard">
-<div>Today Sale<br><span id="todaySale">0</span></div>
-<div>Overall Sale<br><span id="overallSale">0</span></div>
-<div>Overall Profit<br><span id="overallProfit">0</span></div>
-<div>Current Day<br><span id="currentDay">1"></span><br>
-<button onclick="clearDashboard()">Dashboard Clear</button>
-</div>
+<hr>
+
+<h2>Products</h2>
+<input type="text" id="searchBox" placeholder="Search Products..." onkeyup="searchProducts()">
+<div class="products" id="productList"></div>
+
 </div>
 
-<h3>Daily Sales Records</h3>
-<div id="dailyRecords"></div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-// Paste tumhara existing JS code yahan
-// Bus clearDashboard function add karna h
+let products = JSON.parse(localStorage.getItem("products")) || [];
 
-function clearDashboard(){
-  if(confirm("Clear dashboard?")){
-    // Current day sales ko reset karo
-    sales = sales.filter(s => s.day !== currentDay); 
-    products.forEach(p => p.sold = 0);
-    save();
-    refreshView();
-  }
+function saveProducts() {
+    localStorage.setItem("products", JSON.stringify(products));
 }
+
+// ===== Add Product =====
+document.getElementById("addProductForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    let name = document.getElementById("pName").value;
+    let price = parseFloat(document.getElementById("pPrice").value);
+    let discount = parseFloat(document.getElementById("pDiscount").value) || 0;
+    let whatsapp = document.getElementById("pWhatsApp").value;
+    let imgFile = document.getElementById("pImage").files[0];
+
+    if(!imgFile) return alert("Select image!");
+
+    let reader = new FileReader();
+    reader.onload = function(){
+        let imgData = reader.result;
+        products.push({name, price, discount, whatsapp, imgData});
+        saveProducts();
+        renderProducts();
+        document.getElementById("addProductForm").reset();
+    };
+    reader.readAsDataURL(imgFile);
+});
+
+// ===== Render Products =====
+function renderProducts(){
+    let list = document.getElementById("productList");
+    list.innerHTML = "";
+    products.forEach((p,index)=>{
+        let card = document.createElement("div");
+        card.className = "product-card";
+        card.innerHTML = `
+            <img src="${p.imgData}" alt="${p.name}">
+            <h3>${p.name}</h3>
+            <p class="price">₹${p.price}</p>
+            ${p.discount>0? `<p class="discount">${p.discount}% OFF</p>` : ""}
+            <button class="orderBtn" onclick="orderWhatsApp(${index})">Order via WhatsApp</button>
+        `;
+        list.appendChild(card);
+    });
+}
+
+// ===== Search Products =====
+function searchProducts(){
+    let value = document.getElementById("searchBox").value.toLowerCase();
+    let filtered = products.filter(p=>p.name.toLowerCase().includes(value));
+    let list = document.getElementById("productList");
+    list.innerHTML = "";
+    filtered.forEach((p,index)=>{
+        let card = document.createElement("div");
+        card.className = "product-card";
+        card.innerHTML = `
+            <img src="${p.imgData}" alt="${p.name}">
+            <h3>${p.name}</h3>
+            <p class="price">₹${p.price}</p>
+            ${p.discount>0? `<p class="discount">${p.discount}% OFF</p>` : ""}
+            <button class="orderBtn" onclick="orderWhatsApp(${index})">Order via WhatsApp</button>
+        `;
+        list.appendChild(card);
+    });
+}
+
+// ===== WhatsApp Order =====
+function orderWhatsApp(index){
+    let p = products[index];
+    let msg = `Hello! I want to order "${p.name}" priced ₹${p.price}.`;
+    let url = `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+}
+
+// Initial render
+renderProducts();
 </script>
+
 </body>
 </html>
-<link rel="stylesheet" href="style.css">
-<script src="script.js"></script>
