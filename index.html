@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GM Auto Sales System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+/* Paste tumhara existing CSS yahan */
+</style>
+</head>
+<body>
+
+<header>
+<h2>GM Auto Sales System</h2>
+<button onclick="toggleMode()">Dark/Light</button>
+<button onclick="clearSales()">Clear Sales</button>
+<button onclick="takeScreenshot()">Screenshot</button>
+<button onclick="printPage()">Print</button>
+<button onclick="nextDay()">Next Day</button>
+</header>
+
+<div class="container">
+<h3>Add Product</h3>
+<input id="pname" placeholder="Product Name">
+<input type="number" id="cost" placeholder="Cost Price">
+<input type="number" id="sale" placeholder="Sale Price">
+<input type="number" id="stock" placeholder="Stock (optional)">
+<button onclick="addProduct()">Add</button>
+
+<h3>Products</h3>
+<button onclick="renderProducts()">Card View</button>
+<button onclick="showTableView()">Table View</button>
+<button onclick="exportCSV()">Export Excel</button>
+<br>
+<input id="searchBox" placeholder="Search Product..." onkeyup="searchProduct()">
+<div id="productList"></div>
+
+<h3>Dashboard</h3>
+<div class="dashboard">
+<div>Today Sale<br><span id="todaySale">0</span></div>
+<div>Overall Sale<br><span id="overallSale">0</span></div>
+<div>Overall Profit<br><span id="overallProfit">0</span></div>
+<div>Current Day<br><span id="currentDay">1"></span><br>
+<button onclick="clearDashboard()">Dashboard Clear</button>
+</div>
+</div>
+
+<h3>Daily Sales Records</h3>
+<div id="dailyRecords"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+// Paste tumhara existing JS code yahan
+// Bus clearDashboard function add karna h
+
+function clearDashboard(){
+  if(confirm("Clear dashboard?")){
+    // Current day sales ko reset karo
+    sales = sales.filter(s => s.day !== currentDay); 
+    products.forEach(p => p.sold = 0);
+    save();
+    refreshView();
+  }
+}
+</script>
+</body>
+</html>
